@@ -1,0 +1,18 @@
+{
+  "short_name": "choodu cid",
+  "name": "choodu cid Game",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/mZjKSKLC/file-000000003a987207b3b15bcf7c3a80a9.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#0E1A2B",
+  "theme_color": "#0E1A2B",
+  "display": "standalone",
+  "orientation": "portrait"
+}
+
