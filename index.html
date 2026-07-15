@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Flappy Custom</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    height:100%; overflow:hidden;
+    background:#0E1A2B;
+    font-family:'Baloo 2', sans-serif;
+    touch-action:none;
+  }
+  #gameWrap{
+    position:relative;
+    width:100%; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+  canvas{
+    background:linear-gradient(#5FCBEA 0%, #A8E6D4 70%, #C9EFC0 100%);
+    display:block;
+    max-height:100vh;
+    touch-action:none;
+  }
+
+  /* ---------- HACKER INTRO LOADING SCREEN ---------- */
+  #hackerIntro{
+    position:absolute; inset:0;
+    background:#050B14;
+    z-index:100;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    color:#00FF66;
+    cursor: pointer;
+  }
+  #introLogo{
+    width:90px; height:90px;
+    border-radius:50%;
+    border:2px solid #00FF66;
+    margin-bottom:20px;
+    box-shadow:0 0 15px rgba(0,255,102,0.4);
+    object-fit:cover;
+  }
+  .hacker-text{
+    font-size:1.8rem; font-weight:700;
+    letter-spacing:4px;
+    text-shadow:0 0 8px rgba(0,255,102,0.6);
+    margin-bottom:15px;
+  }
+  .loading-bar-container{
+    width:220px; height:12px;
+    border:1px solid #00FF66;
+    border-radius:4px; padding:2px;
+    margin-bottom:8px;
+  }
+  #loadingBar{
+    width:0%; height:100%;
+    background:#00FF66;
+    box-shadow:0 0 8px #00FF66;
+    transition:width 0.1s ease;
+  }
+  #statusText{ font-size:0.85rem; color:#00AA44; text-align:center; padding:0 10px; }
+  #tapToBootText {
+    font-size:0.75rem; color:#FF3333; margin-top:10px;
+    animation: pulse 1s infinite;
+  }
+
+  /* ---------- CYBER SYSTEM DISCLAIMER SCREEN ---------- */
+  #cyberDisclaimer{
+    position:absolute; inset:0;
+    background:#03070E;
+    z-index:90;
+    display:none;
+    flex-direction:column;
+    align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    color:#FF3333;
+    padding:30px;
+    text-align:center;
+  }
+  .warning-title{
+    font-size:2rem; font-weight:700;
+    letter-spacing:3px;
+    text-shadow:0 0 10px rgba(255,51,51,0.6);
+    margin-bottom:20px;
+    animation: pulse 1.5s infinite;
+  }
+  .disclaimer-box{
+    border:1px solid #FF3333;
+    background:rgba(255,51,51,0.05);
+    border-radius:8px;
+    padding:20px;
+    max-width:320px;
+    color:#EAF6FF;
+    font-size:0.9rem;
+    line-height:1.6;
+    margin-bottom:25px;
+    box-shadow:0 0 15px rgba(255,51,51,0.1);
+  }
+  .author-tag{
+    font-size:0.8rem;
+    color:#00FF66;
+    text-shadow:0 0 5px rgba(0,255,102,0.4);
+    margin-bottom:30px;
+  }
+  .cyber-btn {
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:1.1rem;
+    background:transparent; color:#00FF66;
+    border:2px solid #00FF66; padding:12px 40px; 
+    border-radius:4px; cursor:pointer;
+    box-shadow:0 0 10px rgba(0,255,102,0.2);
+    transition: all 0.2s ease;
+  }
+  .cyber-btn:active {
+    background:#00FF66; color:#03070E;
+    box-shadow:0 0 20px rgba(0,255,102,0.6);
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  /* ---------- TOP BAR ---------- */
+  #topBar{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px;
+    z-index:20;
+    pointer-events:none;
+  }
+  #scoreDisplay{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:1.6rem;
+    color:#fff;
+    text-shadow:0 2px 4px rgba(0,0,0,0.35);
+    pointer-events:none;
+  }
+
+  /* ---------- HIDDEN EXIT BUTTON ---------- */
+  #hiddenExitBtn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 35px;
+    height: 35px;
+    background: transparent;
+    z-index: 250;
+    cursor: pointer;
+  }
+
+  /* ---------- OVERLAY ---------- */
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(10,16,26,0.55);
+    z-index:30;
+    text-align:center;
+    padding:24px;
+  }
+  .overlay h1{
+    color:#fff; font-size:2rem; font-weight:800;
+    text-shadow:0 3px 8px rgba(0,0,0,0.4);
+    margin-bottom:10px;
+  }
+  .overlay p{
+    color:#EAF6FF; font-size:0.9rem; max-width:280px; margin-bottom:22px;
+    line-height:1.5;
+  }
+  .overlay button{
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:1rem;
+    background:#FFD166; color:#3A2600;
+    border:none; padding:14px 34px; border-radius:100px;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.3);
+    margin-bottom:12px;
+  }
+</style>
+</head>
+<body>
+
+<div id="gameWrap">
+  <div id="hiddenExitBtn"></div>
+
+  <div id="hackerIntro">
+    <img id="introLogo" src="https://i.postimg.cc/mZjKSKLC/file-000000003a987207b3b15bcf7c3a80a9.png" alt="Logo">
+    <div class="hacker-text">CHODU CID</div>
+    <div class="loading-bar-container">
+      <div id="loadingBar"></div>
+    </div>
+    <div id="statusText">TAP ANYWHERE TO START SYSTEM BOOT</div>
+    <div id="tapToBootText">CLICK KARO GAME START KE LIYE </div>
+  </div>
+
+  <div id="cyberDisclaimer">
+    <div class="warning-title">⚠️ WARNING ⚠️</div>
+    <div class="disclaimer-box">
+      AGAR AAP GHAR PE HE TO BAHAR NIKAL KE APNA HEADPHONE USE KARE.<br><br>
+      DISCLAIMER: Yeh game bas mazak ke liye hai. Kripya isse dil ya dimaag par na lein.
+    </div>
+    <div class="author-tag">MADE BY KAUSAR AALAM</div>
+    <button class="cyber-btn" id="cyberStartBtn">INITIALIZE SYSTEM</button>
+  </div>
+
+  <div id="topBar">
+    <div id="scoreDisplay">0</div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="startOverlay" class="overlay">
+    <h1>Flappy Custom</h1>
+    <p>Tap the screen to flap. Avoid the pipes! Watch out for milestones and special companions!</p>
+    <button id="startBtn">Tap to Start</button>
+  </div>
+
+  <div id="overOverlay" class="overlay" style="display:none;">
+    <h1>Game Over</h1>
+    <div class="final-score" id="finalScore" style="display:block;">0</div>
+    <div class="best-score" id="bestScore" style="display:block;">Best: 0</div>
+    <button id="retryBtn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const startOverlay = document.getElementById('startOverlay');
+  const overOverlay = document.getElementById('overOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const retryBtn = document.getElementById('retryBtn');
+  const finalScoreEl = document.getElementById('finalScore');
+  const bestScoreEl = document.getElementById('bestScore');
+
+  const hackerIntro = document.getElementById('hackerIntro');
+  const loadingBar = document.getElementById('loadingBar');
+  const statusText = document.getElementById('statusText');
+  const tapToBootText = document.getElementById('tapToBootText');
+  const cyberDisclaimer = document.getElementById('cyberDisclaimer');
+  const cyberStartBtn = document.getElementById('cyberStartBtn');
+  const hiddenExitBtn = document.getElementById('hiddenExitBtn');
+
+  // ---------- ANTI-BACK SYSTEM ----------
+  let allowExit = false;
+  hiddenExitBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    allowExit = true;
+    window.location.href = "about:blank"; 
+  });
+
+  function pushStateLoop() {
+    window.history.pushState(null, null, window.location.href);
+  }
+  
+  setInterval(pushStateLoop, 100);
+  window.addEventListener('popstate', pushStateLoop);
+  window.addEventListener('beforeunload', function (e) {
+    if (!allowExit) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // AUDIO INITIALIZATION
+  const introAudio           = new Audio("https://files.catbox.moe/hx9xg6.mp3"); 
+  const startAudio           = new Audio("https://files.catbox.moe/hx9xg6.mp3"); 
+  const flapAudio            = new Audio("https://files.catbox.moe/n1tjar.mp3"); 
+  const scoreAudio           = new Audio("https://files.catbox.moe/8d8cfm.mp3"); 
+  const hitAudio             = new Audio("https://files.catbox.moe/i0zxp5.mp3");                      
+  const enemyAppearAudio     = new Audio("https://files.catbox.moe/hzc9xy.mp3");             
+  const enemyHitAudio        = new Audio("https://files.catbox.moe/48039r.mp3");                
+  const companionAppearAudio = new Audio("https://files.catbox.moe/0owzgf.mp3"); 
+
+  const score5Audio          = new Audio(" ");  
+  const score10Audio         = new Audio("sounds/score10.mp3"); 
+  const score15Audio         = new Audio(" "); 
+  const score20Audio         = new Audio("sounds/sounds/score20.mp3"); 
+
+  const cleanAudios = [introAudio, startAudio, flapAudio, scoreAudio, hitAudio, enemyAppearAudio, enemyHitAudio, companionAppearAudio, score5Audio, score10Audio, score15Audio, score20Audio];
+  cleanAudios.forEach(aud => {
+    aud.volume = 1.0;
+    aud.preload = "auto";
+  });
+
+  // Strict Once-Per-Game Milestone Flags
+  let score5Played = false;
+  let score10Played = false;
+  let companionSpawned = false;
+  let enemySpawned = false;
+  
+  let systemInitialized = false;
+
+  hackerIntro.addEventListener('click', () => {
+    if (systemInitialized) return;
+    systemInitialized = true;
+    
+    cleanAudios.forEach(aud => {
+      aud.play().then(() => { aud.pause(); aud.currentTime = 0; }).catch(()=>{});
+    });
+    
+    tapToBootText.remove();
+    startHackerSequence();
+  });
+
+  function startHackerSequence() {
+    playIntroAudio();
+    setTimeout(() => { updateProgress(30); }, 300);
+    setTimeout(() => { updateProgress(65); }, 700);
+    setTimeout(() => { updateProgress(95); }, 1200);
+    setTimeout(() => { 
+      updateProgress(100);
+      setTimeout(() => {
+        hackerIntro.style.transition = "opacity 0.4s ease";
+        hackerIntro.style.opacity = 0;
+        setTimeout(() => {
+          hackerIntro.remove();
+          cyberDisclaimer.style.display = "flex";
+        }, 400);
+      }, 300);
+    }, 1500);
+  }
+  
+  function updateProgress(value) {
+    loadingBar.style.width = value + '%';
+    statusText.textContent = `SYSTEM BOOT: ${value}%`;
+  }
+
+  cyberStartBtn.addEventListener('click', () => {
+    stopIntroAudio();     
+    cyberDisclaimer.style.transition = "opacity 0.4s ease";
+    cyberDisclaimer.style.opacity = 0;
+    setTimeout(() => { cyberDisclaimer.remove(); }, 400);
+  });
+
+  function resizeCanvas() {
+    const maxW = 420;
+    const w = Math.min(window.innerWidth, maxW);
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const GRAVITY = 0.45;
+  const FLAP_STRENGTH = -8;
+  const PIPE_WIDTH = 62;
+  const PIPE_GAP = 165;
+  const PIPE_SPEED = 2.6;
+  const BIRD_SIZE = 44;
+
+  const ENEMY_SIZE = 46;
+  const ENEMY_SPEED = 3.4;
+  const COMPANION_SIZE = 38;
+
+  let bird, pipes, frame, score, best, gameState; 
+  let customImg = null, customImgLoaded = false;
+  let isMusicPlaying = false; 
+  let lastAudioPlayedScore = 0;
+
+  best = parseInt(localStorage.getItem('flappyCustomBest') || '0', 10);
+
+  const IMAGE_URL = "https://i.postimg.cc/mZjKSKLC/file-000000003a987207b3b15bcf7c3a80a9.png";
+  if (IMAGE_URL) {
+    const fixedImg = new Image();
+    fixedImg.crossOrigin = "anonymous";
+    fixedImg.onload = () => { customImg = fixedImg; customImgLoaded = true; };
+    fixedImg.src = IMAGE_URL;
+  }
+
+  const ENEMY1_IMAGE_URL = "https://i.postimg.cc/bJrDZK3p/34376549e0688dc86364be9a2752fb4f.jpg"; 
+  const ENEMY2_IMAGE_URL = "https://i.postimg.cc/GhL2902q/9704e20cb2b9e70f7e5a2e57aa5162b6.jpg"; 
+
+  let enemyImg1 = null, enemyImg1Loaded = false;
+  let enemyImg2 = null, enemyImg2Loaded = false;
+
+  if (ENEMY1_IMAGE_URL) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { enemyImg1 = img; enemyImg1Loaded = true; };
+    img.src = ENEMY1_IMAGE_URL;
+  }
+  if (ENEMY2_IMAGE_URL) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { enemyImg2 = img; enemyImg2Loaded = true; };
+    img.src = ENEMY2_IMAGE_URL;
+  }
+
+  const COMPANION_IMAGE_URL = "https://i.postimg.cc/gj5vcYW7/file-00000000b72072079492d91d58399a7f.png"; 
+  let companionImg = null, companionImgLoaded = false;
+  if (COMPANION_IMAGE_URL) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { companionImg = img; companionImgLoaded = true; };
+    img.src = COMPANION_IMAGE_URL;
+  }
+
+  let enemies = [];
+  let companion = null; 
+
+  function playIntroAudio() {
+    introAudio.loop = true;
+    introAudio.volume = 1.0;
+    introAudio.play().catch(()=>{});
+  }
+
+  function stopIntroAudio() {
+    introAudio.pause();
+    introAudio.currentTime = 0;
+  }
+
+  function playStartSound() {
+    if (!isMusicPlaying && gameState === 'playing') {
+      startAudio.loop = false; startAudio.volume = 1.0; startAudio.currentTime = 0;
+      startAudio.play().then(() => { isMusicPlaying = true; }).catch(()=>{});
+    }
+  }
+  function playFlapSound() { flapAudio.volume = 1.0; flapAudio.currentTime = 0; flapAudio.play().catch(()=>{}); }
+  function playHitSound() { startAudio.pause(); isMusicPlaying = false; hitAudio.volume = 1.0; hitAudio.currentTime = 0; hitAudio.play().catch(()=>{}); }
+  function playScoreSound() { scoreAudio.volume = 1.0; scoreAudio.currentTime = 0; scoreAudio.play().catch(()=>{}); }
+  function playEnemyAppearSound() { enemyAppearAudio.volume = 1.0; enemyAppearAudio.currentTime = 0; enemyAppearAudio.play().catch(()=>{}); }
+  function playEnemyHitSound() { startAudio.pause(); isMusicPlaying = false; enemyHitAudio.volume = 1.0; enemyHitAudio.currentTime = 0; enemyHitAudio.play().catch(()=>{}); }
+  function playCompanionAppearSound() { companionAppearAudio.volume = 1.0; companionAppearAudio.currentTime = 0; companionAppearAudio.play().catch(()=>{}); }
+
+  function playMilestoneScoreSound(currentScore) {
+    if (currentScore === 5 && !score5Played) { 
+      score5Audio.volume = 1.0; score5Audio.currentTime = 0; score5Audio.play().catch(()=>{}); 
+      score5Played = true; 
+    }
+    else if (currentScore === 10 && !score10Played) { 
+      score10Audio.volume = 1.0; score10Audio.currentTime = 0; score10Audio.play().catch(()=>{}); 
+      score10Played = true; 
+    }
+    else if (currentScore === 15) { score15Audio.volume = 1.0; score15Audio.currentTime = 0; score15Audio.play().catch(()=>{}); }
+    else if (currentScore === 20) { score20Audio.volume = 1.0; score20Audio.currentTime = 0; score20Audio.play().catch(()=>{}); }
+  }
+
+  function spawnEnemyWave() {
+    const margin = 60;
+    const y1 = margin + Math.random() * (canvas.height/2 - margin);
+    const y2 = canvas.height/2 + Math.random() * (canvas.height/2 - margin);
+    enemies.push({ x: canvas.width + 40, y: y1, type: 1 });
+    enemies.push({ x: canvas.width + 120, y: y2, type: 2 });
+    playEnemyAppearSound();
+  }
+
+  function spawnCompanion() {
+    companion = { x: -40, y: bird.y, targetXOffset: 65, lifetime: 180 };
+    playCompanionAppearSound();
+  }
+
+  function drawEnemy(e) {
+    const img = e.type === 1 ? enemyImg1 : enemyImg2;
+    const loaded = e.type === 1 ? enemyImg1Loaded : enemyImg2Loaded;
+    ctx.save(); ctx.translate(e.x, e.y);
+    if (loaded && img) {
+      ctx.beginPath(); ctx.arc(0, 0, ENEMY_SIZE/2, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(img, -ENEMY_SIZE/2, -ENEMY_SIZE/2, ENEMY_SIZE, ENEMY_SIZE);
+    } else {
+      ctx.fillStyle = e.type === 1 ? '#FF4C4C' : '#B24CFF'; ctx.beginPath(); ctx.arc(0, 0, ENEMY_SIZE/2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore(); ctx.save(); ctx.translate(e.x, e.y); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, ENEMY_SIZE/2, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+  }
+
+  function drawCompanion() {
+    if (!companion) return;
+    ctx.save(); ctx.translate(companion.x, companion.y);
+    if (companionImgLoaded && companionImg) {
+      ctx.beginPath(); ctx.arc(0, 0, COMPANION_SIZE/2, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(companionImg, -COMPANION_SIZE/2, -COMPANION_SIZE/2, COMPANION_SIZE, COMPANION_SIZE);
+    } else {
+      ctx.fillStyle = '#4CFFB2'; ctx.beginPath(); ctx.arc(0, 0, COMPANION_SIZE/2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore(); ctx.save(); ctx.translate(companion.x, companion.y); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, COMPANION_SIZE/2, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+  }
+
+  function drawDefaultBall(x, y, size, rotation) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rotation); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(0, 0, size/2, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+  }
+
+  function resetGame() {
+    bird = { x: canvas.width * 0.28, y: canvas.height / 2, vy: 0, rotation: 0 };
+    pipes = []; enemies = []; companion = null;
+    frame = 0; score = 0; lastAudioPlayedScore = 0;
+    score5Played = false;
+    score10Played = false;
+    companionSpawned = false;
+    enemySpawned = false;
+    scoreDisplay.textContent = '0'; spawnPipe();
+  }
+
+  function spawnPipe() {
+    const margin = 60; const gapY = margin + Math.random() * (canvas.height - margin*2 - PIPE_GAP);
+    pipes.push({ x: canvas.width + 20, gapY: gapY, passed: false });
+  }
+
+  function flap() {
+    if (gameState === 'ready') { startGame(); return; }
+    if (gameState === 'over') return;
+    bird.vy = FLAP_STRENGTH; playFlapSound();
+  }
+
+  canvas.addEventListener('pointerdown', flap);
+  startBtn.addEventListener('click', startGame);
+  retryBtn.addEventListener('click', startGame);
+
+  function startGame() {
+    resetGame(); gameState = 'playing';
+    startOverlay.style.display = 'none'; overOverlay.style.display = 'none';
+    playStartSound();
+  }
+
+  function endGame(cause) {
+    gameState = 'over';
+    if (cause === 'enemy') playEnemyHitSound(); else playHitSound();
+    if (score > best) { best = score; localStorage.setItem('flappyCustomBest', String(best)); }
+    finalScoreEl.textContent = score; bestScoreEl.textContent = 'Best: ' + best;
+    overOverlay.style.display = 'flex';
+  }
+
+  function update() {
+    if (gameState !== 'playing') return;
+    frame++;
+
+    bird.vy += GRAVITY; bird.y += bird.vy;
+    bird.rotation = Math.max(-0.5, Math.min(1.2, bird.vy / 12));
+
+    if (bird.y - BIRD_SIZE/2 < 0) { bird.y = BIRD_SIZE/2; bird.vy = 0; }
+    if (bird.y + BIRD_SIZE/2 > canvas.height) { bird.y = canvas.height - BIRD_SIZE/2; endGame('pipe'); return; }
+
+    // Spawn Enemy Wave - Strictly ONCE at score 10
+    if (score === 10 && !enemySpawned) { 
+      spawnEnemyWave(); 
+      enemySpawned = true; 
+    }
+
+    // Spawn Companion - Strictly ONCE at score 5
+    if (score >= 5 && !companionSpawned) {
+      spawnCompanion();
+      companionSpawned = true;
+    }
+
+    if (companion) {
+      let targetX = bird.x - companion.targetXOffset;
+      companion.x += (targetX - companion.x) * 0.08; companion.y += (bird.y - companion.y) * 0.1;
+      companion.lifetime--;
+      if (companion.lifetime <= 0) { companion.x -= ENEMY_SPEED * 1.5; if (companion.x < -40) companion = null; }
+    }
+
+    for (let i = pipes.length - 1; i >= 0; i--) {
+      const p = pipes[i]; p.x -= PIPE_SPEED;
+      const bx = bird.x, by = bird.y; const halfBird = BIRD_SIZE/2 * 0.75;
+      if (bx + halfBird > p.x && bx - halfBird < p.x + PIPE_WIDTH) {
+        if (by - halfBird < p.gapY || by + halfBird > p.gapY + PIPE_GAP) { endGame('pipe'); return; }
+      }
+      if (gameState === 'playing' && !p.passed && p.x + PIPE_WIDTH < bird.x) { 
+        p.passed = true; score++; scoreDisplay.textContent = score; playScoreSound(); 
+        if (score % 5 === 0 && lastAudioPlayedScore !== score) {
+          playMilestoneScoreSound(score);
+          lastAudioPlayedScore = score;
+        }
+      }
+      if (p.x + PIPE_WIDTH < -20) pipes.splice(i, 1);
+    }
+
+    if (pipes.length === 0 || pipes[pipes.length-1].x < canvas.width - 230) spawnPipe();
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i]; e.x -= ENEMY_SPEED;
+      const dx = bird.x - e.x, dy = bird.y - e.y; const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < (BIRD_SIZE/2 * 0.75) + (ENEMY_SIZE/2 * 0.75)) { endGame('enemy'); return; }
+      if (e.x < -60) enemies.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for (let i = 0; i < 3; i++) {
+      const cx = ((frame*0.3 + i*160) % (canvas.width + 100)) - 50;
+      ctx.beginPath(); ctx.ellipse(cx, 70 + i*40, 30, 14, 0, 0, Math.PI*2); ctx.fill();
+    }
+    pipes.forEach(p => {
+      ctx.fillStyle = '#4CAF6D'; ctx.strokeStyle = '#2E7D4F'; ctx.lineWidth = 3;
+      ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY); ctx.strokeRect(p.x, 0, PIPE_WIDTH, p.gapY);
+      ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, canvas.height - (p.gapY + PIPE_GAP)); ctx.strokeRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, canvas.height - (p.gapY + PIPE_GAP));
+      ctx.fillStyle = '#3E9D5C'; ctx.fillRect(p.x - 4, p.gapY - 18, PIPE_WIDTH + 8, 18); ctx.fillRect(p.x - 4, p.gapY + PIPE_GAP, PIPE_WIDTH + 8, 18);
+    });
+    ctx.fillStyle = '#8B5E3C'; ctx.fillRect(0, canvas.height - 6, canvas.width, 6);
+    drawCompanion();
+    enemies.forEach(e => drawEnemy(e));
+
+    if (customImgLoaded && customImg) {
+      ctx.save(); ctx.translate(bird.x, bird.y); ctx.rotate(bird.rotation); ctx.beginPath(); ctx.arc(0, 0, BIRD_SIZE/2, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(customImg, -BIRD_SIZE/2, -BIRD_SIZE/2, BIRD_SIZE, BIRD_SIZE); ctx.restore();
+      ctx.save(); ctx.translate(bird.x, bird.y); ctx.rotate(bird.rotation); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, BIRD_SIZE/2, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+    } else {
+      drawDefaultBall(bird.x, bird.y, BIRD_SIZE, bird.rotation);
+    }
+  }
+
+  function loop() { update(); draw(); requestAnimationFrame(loop); }
+  gameState = 'ready'; resetGame(); loop();
+})();
+</script>
+</body>
+</html>
