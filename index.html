@@ -8,44 +8,7 @@
 <meta name="theme-color" content="#0E1A2B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-<script>
-  let deferredPrompt;
-  const installBtn = document.getElementById('pwaInstallBtn');
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('PWA Registered Successfully!'))
-        .catch(err => console.log('PWA Register Failed!', err));
-    });
-  }
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) {
-      installBtn.style.display = 'block';
-    }
-  });
-
-  if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
-  }
-
-  window.addEventListener('appinstalled', () => {
-    if (installBtn) {
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  });
-</script>
   
   
 <style>
@@ -660,5 +623,42 @@
   gameState = 'ready'; resetGame(); loop();
 })();
 </script>
+  <script>
+  window.onload = function() {
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwaInstallBtn');
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA Registered Successfully!'))
+          .catch(err => console.log('PWA Register Failed!', err));
+    }
+
+    // Button dikhane ka logic
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) {
+        installBtn.style.display = 'block';
+        console.log('Install button is now visible!');
+      }
+    });
+
+    // Click karne par install trigger
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      });
+    }
+
+</script>    
+      
+  
 </body>
 </html>
